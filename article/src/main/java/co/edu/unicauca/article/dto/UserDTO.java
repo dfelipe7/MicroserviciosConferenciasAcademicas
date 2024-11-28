@@ -18,6 +18,7 @@ public class UserDTO {
     private Long id; // ID del usuario
     private String username; // Nombre de usuario
     private String role; // Rol del usuario (ej. autor, organizador)
+    private String email;
 
     /**
      * Constructor de la clase UserDTO.
@@ -26,10 +27,11 @@ public class UserDTO {
      * @param username  el nombre de usuario
      * @param role      el rol del usuario
      */
-    public UserDTO(Long id, String username, String role) {
+    public UserDTO(Long id, String username, String role, String email) {
         this.id = id;
         this.username = username;
         this.role = role;
+        this.email=email;
     }
 
     /**
@@ -85,4 +87,13 @@ public class UserDTO {
     public void setRole(String role) {
         this.role = role;
     }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+    
 }
