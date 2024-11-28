@@ -1,14 +1,14 @@
 package vistasAutor;
 
-
 import javax.swing.*;
 import java.awt.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import java.io.File;
 import javax.swing.table.TableCellRenderer;
+import utils.Observer;
 
-public class ArticleFrame extends JFrame {
+public class ArticleFrame extends JFrame implements Observer {
 
     private JTextField titleField;
     private JTextArea abstractField;
@@ -24,6 +24,8 @@ public class ArticleFrame extends JFrame {
     public ArticleFrame(String autorId) {
         this.autorId = autorId;
         articleService = new ArticleService();
+        articleService.addObserver(this); // Registra el frame como observador
+
         setTitle("Gestión de Artículos");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -106,7 +108,7 @@ public class ArticleFrame extends JFrame {
         String[] columnNames = {"ID", "Título", "Resumen", "Palabras Clave", "Archivo", "Autor ID", "PDF"};
         tableModel = new DefaultTableModel(columnNames, 0);
         articleTable = new JTable(tableModel);
-        
+
         JScrollPane scrollPane = new JScrollPane(articleTable);
         add(scrollPane, BorderLayout.CENTER);
 
@@ -137,37 +139,38 @@ public class ArticleFrame extends JFrame {
         }
     }
 
-    private void createArticle() {
-        try {
-            String title = titleField.getText().trim();
-            String abstractText = abstractField.getText().trim();
-            String keywords = keywordsField.getText().trim();
+  private void createArticle() {
+    try {
+        String title = titleField.getText().trim();
+        String abstractText = abstractField.getText().trim();
+        String keywords = keywordsField.getText().trim();
 
-            if (title.isEmpty() || abstractText.isEmpty() || keywords.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Por favor, completa todos los campos.");
-                return;
-            }
-
-            String selectedConference = (String) conferenceComboBox.getSelectedItem();
-            if (selectedConference == null) {
-                JOptionPane.showMessageDialog(this, "Por favor, selecciona una conferencia para asociar el artículo.");
-                return;
-            }
-
-            if (selectedFile == null) {
-                JOptionPane.showMessageDialog(this, "Por favor, selecciona un archivo PDF para subir.");
-                return;
-            }
-
-            String selectedConferenceId = selectedConference.split(" - ")[0];
-            String result = articleService.createArticle(title, abstractText, keywords, selectedConferenceId, autorId, selectedFile);
-            JOptionPane.showMessageDialog(this, result);
-            clearFields();
-            loadArticles();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error al crear el artículo: " + e.getMessage());
+        if (title.isEmpty() || abstractText.isEmpty() || keywords.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Por favor, completa todos los campos.");
+            return;
         }
+
+        String selectedConference = (String) conferenceComboBox.getSelectedItem();
+        if (selectedConference == null) {
+            JOptionPane.showMessageDialog(this, "Por favor, selecciona una conferencia para asociar el artículo.");
+            return;
+        }
+
+        if (selectedFile == null) {
+            JOptionPane.showMessageDialog(this, "Por favor, selecciona un archivo PDF para subir.");
+            return;
+        }
+
+        String selectedConferenceId = selectedConference.split(" - ")[0];
+        articleService.createArticle(title, abstractText, keywords, selectedConferenceId, autorId, selectedFile);
+
+        clearFields();
+        loadArticles();
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, "Error al crear el artículo: " + e.getMessage());
     }
+}
+
 
     private void loadConferences() {
         try {
@@ -262,33 +265,32 @@ public class ArticleFrame extends JFrame {
         }
     }
 
-    private void updateArticle() {
-        int selectedRow = articleTable.getSelectedRow();
-        if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "Por favor, selecciona un artículo para actualizar.");
+ private void updateArticle() {
+    int selectedRow = articleTable.getSelectedRow();
+    if (selectedRow == -1) {
+        JOptionPane.showMessageDialog(this, "Por favor, selecciona un artículo para actualizar.");
+        return;
+    }
+
+    try {
+        String articleId = (String) tableModel.getValueAt(selectedRow, 0);
+        String title = titleField.getText().trim();
+        String abstractText = abstractField.getText().trim();
+        String keywords = keywordsField.getText().trim();
+        String pdfFilePath = selectedFile;
+
+        if (title.isEmpty() || abstractText.isEmpty() || keywords.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Por favor, completa todos los campos.");
             return;
         }
 
-        try {
-            String articleId = (String) tableModel.getValueAt(selectedRow, 0);
-            String title = titleField.getText().trim();
-            String abstractText = abstractField.getText().trim();
-            String keywords = keywordsField.getText().trim();
-            String pdfFilePath = selectedFile;
-
-            if (title.isEmpty() || abstractText.isEmpty() || keywords.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Por favor, completa todos los campos.");
-                return;
-            }
-
-            String result = articleService.updateArticle(Long.parseLong(articleId), title, abstractText, keywords, pdfFilePath, autorId);
-            JOptionPane.showMessageDialog(this, result);
-            loadArticles();
-            clearFields();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error al actualizar el artículo: " + e.getMessage());
-        }
+        articleService.updateArticle(Long.parseLong(articleId), title, abstractText, keywords, pdfFilePath, autorId);
+        loadArticles();
+        clearFields();
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, "Error al actualizar el artículo: " + e.getMessage());
     }
+}
 
     private void deleteArticle() {
         int selectedRow = articleTable.getSelectedRow();
@@ -299,9 +301,8 @@ public class ArticleFrame extends JFrame {
 
         try {
             String articleId = (String) tableModel.getValueAt(selectedRow, 0);
-            String result = articleService.deleteArticle(Long.parseLong(articleId), autorId);
-            JOptionPane.showMessageDialog(this, result);
-            loadArticles();
+            articleService.deleteArticle(Long.parseLong(articleId), autorId); // No mostramos mensaje aquí
+            loadArticles(); // Actualizamos la lista después de la eliminación
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error al eliminar el artículo: " + e.getMessage());
         }
@@ -329,4 +330,8 @@ public class ArticleFrame extends JFrame {
         selectedFile = null;
     }
 
+    @Override
+    public void update(String message) {
+        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, message, "Notificación", JOptionPane.INFORMATION_MESSAGE));
+    }
 }

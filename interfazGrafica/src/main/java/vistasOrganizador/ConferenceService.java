@@ -123,5 +123,3 @@ public class ConferenceService {
 
 }
 
-// Métodos para Update y Delete pueden seguir la misma estructura
-

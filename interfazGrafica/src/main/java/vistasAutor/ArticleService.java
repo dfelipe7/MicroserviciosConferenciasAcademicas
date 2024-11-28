@@ -30,7 +30,9 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.ArrayList;
 import java.util.Map;
+import utils.Observer;
 
 public class ArticleService {
 
@@ -39,46 +41,61 @@ public class ArticleService {
     private HttpClient client = HttpClient.newHttpClient();
 //private HttpClient client = HttpClient.newHttpClient();
     private ObjectMapper objectMapper = new ObjectMapper();
+    
+    private List<Observer> observers = new ArrayList<>(); // Lista de observadores
 
-    public String createArticle(String name, String summary, String keywords, String conferenceId, String userId, String filePath) throws Exception {
-        // Crear el JSON del artículo con los campos correctos
-        Map<String, Object> articleData = Map.of(
-            "name", name,         // Cambiado de "title" a "name"
-            "summary", summary,    // Cambiado de "abstract" a "summary"
-            "keywords", keywords,
-            "filePath", filePath  // Añadir la ruta del archivo
-        );
+    // Métodos para gestionar observadores
+    public void addObserver(Observer observer) {
+        observers.add(observer);
+    }
 
-        String json = objectMapper.writeValueAsString(articleData);
+    public void removeObserver(Observer observer) {
+        observers.remove(observer);
+    }
 
-        System.out.println("JSON a enviar: " + json);
-
-        // Modificar la URL para incluir userId y conferenceId como parámetros de consulta
-        String urlWithParams = String.format("%s?userId=%s&conferenceId=%s", BASE_URL, userId, conferenceId);
-
-        System.out.println("URL con parámetros: " + urlWithParams);
-
-        // Crear la solicitud HTTP
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI(urlWithParams))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
-                .build();
-
-        // Enviar la solicitud y obtener la respuesta
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        // Imprimir la respuesta del servidor para depuración
-        System.out.println("Código de respuesta: " + response.statusCode());
-        System.out.println("Respuesta del servidor: " + response.body());
-
-        // Comprobar el código de respuesta
-        if (response.statusCode() == 201) {
-            return "Artículo creado exitosamente.";
-        } else {
-            throw new Exception("Error al crear el artículo: " + response.body());
+    private void notifyObservers(String message) {
+        for (Observer observer : observers) {
+            observer.update(message);
         }
     }
+
+   public void createArticle(String name, String summary, String keywords, String conferenceId, String userId, String filePath) throws Exception {
+    // Crear el JSON del artículo con los campos correctos
+    Map<String, Object> articleData = Map.of(
+            "name", name,
+            "summary", summary,
+            "keywords", keywords,
+            "filePath", filePath
+    );
+
+    String json = objectMapper.writeValueAsString(articleData);
+
+    System.out.println("JSON a enviar: " + json);
+
+    // Modificar la URL para incluir userId y conferenceId como parámetros de consulta
+    String urlWithParams = String.format("%s?userId=%s&conferenceId=%s", BASE_URL, userId, conferenceId);
+
+    System.out.println("URL con parámetros: " + urlWithParams);
+
+    // Crear la solicitud HTTP
+    HttpRequest request = HttpRequest.newBuilder()
+            .uri(new URI(urlWithParams))
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
+            .build();
+
+    // Enviar la solicitud y obtener la respuesta
+    HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+    System.out.println("Código de respuesta: " + response.statusCode());
+    System.out.println("Respuesta del servidor: " + response.body());
+
+    if (response.statusCode() == 201) {
+        notifyObservers("Artículo creado: " + name);
+    } else {
+        throw new Exception("Error al crear el artículo: " + response.body());
+    }
+}
 
 
 
@@ -146,12 +163,20 @@ public class ArticleService {
 }
 
 
-   public String updateArticle(Long articleId, String title, String abstractText, String keywords, String pdfFilePath,  String userId) throws Exception {
+public void updateArticle(Long articleId, String title, String abstractText, String keywords, String pdfFilePath, String userId) throws Exception {
+    // Reemplazar barras invertidas en filePath
+    if (pdfFilePath != null) {
+        pdfFilePath = pdfFilePath.replace("\\", "\\\\");
+    }
+
     String json = String.format("{\"name\": \"%s\", \"summary\": \"%s\", \"keywords\": \"%s\", \"filePath\": \"%s\"}",
             title, abstractText, keywords, pdfFilePath);
 
-    // URL que incluye el userId como parámetro de consulta
+    // Construir URL con parámetros
     String urlWithParams = String.format("%s/%d?userId=%s", BASE_URL, articleId, userId);
+
+    System.out.println("URL construida: " + urlWithParams);
+    System.out.println("JSON enviado: " + json);
 
     HttpRequest request = HttpRequest.newBuilder()
             .uri(new URI(urlWithParams))
@@ -161,29 +186,35 @@ public class ArticleService {
 
     HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
+    System.out.println("Código de respuesta: " + response.statusCode());
+    System.out.println("Respuesta del servidor: " + response.body());
+
     if (response.statusCode() == 200) {
-        return "Artículo actualizado con éxito";
+        notifyObservers("Artículo actualizado: " + title);
     } else {
         throw new Exception("Error al actualizar el artículo: " + response.body());
     }
 }
 
-    public String deleteArticle(Long articleId, String userId) throws Exception {
-        // URL que incluye el userId como parámetro de consulta
-        String urlWithParams = String.format("%s/%d?userId=%s", BASE_URL, articleId, userId);
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI(urlWithParams))
-                .DELETE()
-                .build();
 
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+public void deleteArticle(Long articleId, String userId) throws Exception {
+    // URL que incluye el userId como parámetro de consulta
+    String urlWithParams = String.format("%s/%d?userId=%s", BASE_URL, articleId, userId);
 
-        if (response.statusCode() == 200) {
-            return "Artículo eliminado con éxito";
-        } else {
-            throw new Exception("Error al eliminar el artículo: " + response.body());
-        }
+    HttpRequest request = HttpRequest.newBuilder()
+            .uri(new URI(urlWithParams))
+            .DELETE()
+            .build();
+
+    HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+    if (response.statusCode() == 200) {
+        notifyObservers("Artículo eliminado con ID: " + articleId);
+    } else {
+        throw new Exception("Error al eliminar el artículo: " + response.body());
     }
+}
+
 
 }
