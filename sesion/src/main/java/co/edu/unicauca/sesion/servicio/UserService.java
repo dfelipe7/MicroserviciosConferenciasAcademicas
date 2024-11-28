@@ -5,6 +5,7 @@
 package co.edu.unicauca.sesion.servicio;
 
 import co.edu.unicauca.sesion.dao.UserRepository;
+import co.edu.unicauca.sesion.factory.UserFactory;
 import co.edu.unicauca.sesion.model.User;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -27,35 +28,24 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class UserService {
-    
+
     @Autowired
     private UserRepository userRepository;
 
     /**
-     * Registra un nuevo usuario en el sistema.
-     *
-     * @param name El nombre del usuario.
-     * @param email El correo electrónico del usuario.
-     * @param password La contraseña del usuario.
-     * @param role El rol del usuario en el sistema.
-     * @return El usuario registrado.
-     * @throws IllegalArgumentException si el correo electrónico ya está registrado.
+     * Registramos un nuevo usuario utilizando la fábrica.
      */
     public User registerUser(String name, String email, String password, String role) {
         if (userRepository.findByEmail(email).isPresent()) {
-            throw new IllegalArgumentException("El email ya está registrado");
+           // throw new IllegalArgumentException("El email ya está registrado");
         }
 
-        User user = new User();
-        user.setName(name);
-        user.setEmail(email);
-        user.setPassword(hashPassword(password));
-        user.setRole(role);
+        User user = UserFactory.createUser(name, email, hashPassword(password), role);
         return userRepository.save(user);
     }
 
     /**
-     * Intenta autenticar un usuario con las credenciales proporcionadas.
+     * Intentamos autenticar un usuario con las credenciales proporcionadas.
      *
      * @param email El correo electrónico del usuario.
      * @param password La contraseña del usuario.
@@ -89,7 +79,7 @@ public class UserService {
     }
 
     /**
-     * Busca un usuario por su ID.
+     * Buscamos un usuario por su ID.
      *
      * @param id El ID del usuario.
      * @return Un {@link Optional} que contiene el usuario si se encuentra, o vacío si no.
@@ -111,7 +101,7 @@ public class UserService {
     }
 
     /**
-     * Obtiene el ID de un usuario a partir de su correo electrónico.
+     * Obtenemos el ID de un usuario a partir de su correo electrónico.
      *
      * @param email El correo electrónico del usuario.
      * @return El ID del usuario, o null si no se encuentra.
@@ -123,7 +113,7 @@ public class UserService {
     }
 
     /**
-     * Obtiene el rol de un usuario a partir de su correo electrónico.
+     * Obtenemos el rol de un usuario a partir de su correo electrónico.
      *
      * @param email El correo electrónico del usuario.
      * @return El rol del usuario, o null si no se encuentra.
