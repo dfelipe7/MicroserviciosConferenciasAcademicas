@@ -1,12 +1,15 @@
 package vistasAutor;
 
+import entidades.ReviewDTO;
 import javax.swing.*;
 import java.awt.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import java.io.File;
+import java.util.List;
 import javax.swing.table.TableCellRenderer;
 import utils.Observer;
+import vistasAutor.AuthorFrame;
 
 public class ArticleFrame extends JFrame implements Observer {
 
@@ -19,7 +22,7 @@ public class ArticleFrame extends JFrame implements Observer {
     private String selectedFile;
     private JTable articleTable;
     private DefaultTableModel tableModel;
-    private JTextField fileNameField;  // Cuadro de texto para mostrar el nombre del archivo
+    private JTextField fileNameField; // Cuadro de texto para mostrar el nombre del archivo
 
     public ArticleFrame(String autorId) {
         this.autorId = autorId;
@@ -83,7 +86,7 @@ public class ArticleFrame extends JFrame implements Observer {
         // Cuadro de texto deshabilitado para mostrar el nombre del archivo
         gbc.gridx = 1;
         fileNameField = new JTextField(20);
-        fileNameField.setEditable(false);  // Hacer el campo no editable
+        fileNameField.setEditable(false); // Hacer el campo no editable
         inputPanel.add(fileNameField, gbc);
 
         row++;
@@ -126,6 +129,10 @@ public class ArticleFrame extends JFrame implements Observer {
         deleteButton.addActionListener(e -> deleteArticle());
         actionPanel.add(deleteButton);
 
+        JButton viewArticleStatusButton = new JButton("Ver Estado y Comentarios");
+        viewArticleStatusButton.addActionListener(e -> viewArticleStatus());
+        actionPanel.add(viewArticleStatusButton);
+
         add(actionPanel, BorderLayout.SOUTH);
     }
 
@@ -134,54 +141,51 @@ public class ArticleFrame extends JFrame implements Observer {
         fileChooser.setFileFilter(new FileNameExtensionFilter("Documentos PDF", "pdf"));
         if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             selectedFile = fileChooser.getSelectedFile().getAbsolutePath();
-            fileNameField.setText(selectedFile);  // Mostrar el nombre del archivo en el cuadro de texto
+            fileNameField.setText(selectedFile); // Mostrar el nombre del archivo en el cuadro de texto
             JOptionPane.showMessageDialog(this, "Archivo seleccionado: " + selectedFile);
         }
     }
 
-  private void createArticle() {
-    try {
-        String title = titleField.getText().trim();
-        String abstractText = abstractField.getText().trim();
-        String keywords = keywordsField.getText().trim();
+    private void createArticle() {
+        try {
+            String title = titleField.getText().trim();
+            String abstractText = abstractField.getText().trim();
+            String keywords = keywordsField.getText().trim();
 
-        if (title.isEmpty() || abstractText.isEmpty() || keywords.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Por favor, completa todos los campos.");
-            return;
+            if (title.isEmpty() || abstractText.isEmpty() || keywords.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Por favor, completa todos los campos.");
+                return;
+            }
+
+            String selectedConference = (String) conferenceComboBox.getSelectedItem();
+            if (selectedConference == null) {
+                JOptionPane.showMessageDialog(this, "Por favor, selecciona una conferencia para asociar el artículo.");
+                return;
+            }
+
+            if (selectedFile == null) {
+                JOptionPane.showMessageDialog(this, "Por favor, selecciona un archivo PDF para subir.");
+                return;
+            }
+
+            String selectedConferenceId = selectedConference.split(" - ")[0];
+            articleService.createArticle(title, abstractText, keywords, selectedConferenceId, autorId, selectedFile);
+
+            clearFields();
+            loadArticles();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error al crear el artículo: " + e.getMessage());
         }
-
-        String selectedConference = (String) conferenceComboBox.getSelectedItem();
-        if (selectedConference == null) {
-            JOptionPane.showMessageDialog(this, "Por favor, selecciona una conferencia para asociar el artículo.");
-            return;
-        }
-
-        if (selectedFile == null) {
-            JOptionPane.showMessageDialog(this, "Por favor, selecciona un archivo PDF para subir.");
-            return;
-        }
-
-        String selectedConferenceId = selectedConference.split(" - ")[0];
-        articleService.createArticle(title, abstractText, keywords, selectedConferenceId, autorId, selectedFile);
-
-        clearFields();
-        loadArticles();
-    } catch (Exception e) {
-        JOptionPane.showMessageDialog(this, "Error al crear el artículo: " + e.getMessage());
     }
-}
-
 
     private void loadConferences() {
         try {
             String[][] conferences = articleService.getConferences();
             conferenceComboBox.removeAllItems();
 
-            // Cargar cada conferencia en el JComboBox una por una
             for (String[] conference : conferences) {
                 String conferenceEntry = conference[0] + " - " + conference[1];
                 conferenceComboBox.addItem(conferenceEntry);
-                // break; 
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
@@ -201,19 +205,46 @@ public class ArticleFrame extends JFrame implements Observer {
                     article[3],
                     article[4],
                     article[5],
-                    "Abrir PDF" // Texto del botón en la última columna
+                    "Abrir PDF"
                 };
                 tableModel.addRow(rowData);
             }
 
             // Agregar un botón en la columna de "Abrir PDF"
-            articleTable.getColumnModel().getColumn(6).setCellRenderer((TableCellRenderer) new ButtonRenderer());
+            articleTable.getColumnModel().getColumn(6).setCellRenderer(new ButtonRenderer());
             articleTable.getColumnModel().getColumn(6).setCellEditor(new ButtonEditor(new JCheckBox()));
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error al cargar los artículos: " + e.getMessage());
         }
     }
+private void viewArticleStatus() {
+    int selectedRow = articleTable.getSelectedRow();
+    if (selectedRow == -1) {
+        JOptionPane.showMessageDialog(this, "Por favor, selecciona un artículo para ver el estado.");
+        return;
+    }
+
+    try {
+        String articleId = (String) tableModel.getValueAt(selectedRow, 0);
+
+        // Llamada al servicio de revisión para obtener el estado y comentarios del artículo
+        ReviewDTO review = articleService.getReviewByArticleId(Long.parseLong(articleId));
+
+        if (review == null) {
+            JOptionPane.showMessageDialog(this, "No hay información de revisión para este artículo.");
+            return;
+        }
+
+        // Mostrar el estado y los comentarios en la ventana `AuthorFrame`
+        AuthorFrame authorFrame = new AuthorFrame(review);
+        authorFrame.setVisible(true);
+
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, "Error al cargar el estado y los comentarios: " + e.getMessage());
+    }
+}
+
 
     // Renderer para mostrar el botón en la celda
     class ButtonRenderer extends JButton implements TableCellRenderer {
@@ -224,8 +255,8 @@ public class ArticleFrame extends JFrame implements Observer {
 
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
-                boolean isSelected, boolean hasFocus,
-                int row, int column) {
+                                                       boolean isSelected, boolean hasFocus,
+                                                       int row, int column) {
             return this;
         }
     }
@@ -244,9 +275,9 @@ public class ArticleFrame extends JFrame implements Observer {
 
         @Override
         public Component getTableCellEditorComponent(JTable table, Object value,
-                boolean isSelected, int row, int column) {
+                                                     boolean isSelected, int row, int column) {
             pdfPath = (String) table.getModel().getValueAt(row, 4); // Obtiene la ruta del PDF de la columna 4
-            return (Component) editorComponent;
+            return editorComponent;
         }
 
         @Override
@@ -255,42 +286,32 @@ public class ArticleFrame extends JFrame implements Observer {
         }
     }
 
-    private void fillFieldsWithSelectedArticle() {
+    private void updateArticle() {
         int selectedRow = articleTable.getSelectedRow();
-        if (selectedRow != -1) {
-            titleField.setText((String) tableModel.getValueAt(selectedRow, 1));
-            abstractField.setText((String) tableModel.getValueAt(selectedRow, 2));
-            keywordsField.setText((String) tableModel.getValueAt(selectedRow, 3));
-            fileNameField.setText((String) tableModel.getValueAt(selectedRow, 4));
-        }
-    }
-
- private void updateArticle() {
-    int selectedRow = articleTable.getSelectedRow();
-    if (selectedRow == -1) {
-        JOptionPane.showMessageDialog(this, "Por favor, selecciona un artículo para actualizar.");
-        return;
-    }
-
-    try {
-        String articleId = (String) tableModel.getValueAt(selectedRow, 0);
-        String title = titleField.getText().trim();
-        String abstractText = abstractField.getText().trim();
-        String keywords = keywordsField.getText().trim();
-        String pdfFilePath = selectedFile;
-
-        if (title.isEmpty() || abstractText.isEmpty() || keywords.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Por favor, completa todos los campos.");
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Por favor, selecciona un artículo para actualizar.");
             return;
         }
 
-        articleService.updateArticle(Long.parseLong(articleId), title, abstractText, keywords, pdfFilePath, autorId);
-        loadArticles();
-        clearFields();
-    } catch (Exception e) {
-        JOptionPane.showMessageDialog(this, "Error al actualizar el artículo: " + e.getMessage());
+        try {
+            String articleId = (String) tableModel.getValueAt(selectedRow, 0);
+            String title = titleField.getText().trim();
+            String abstractText = abstractField.getText().trim();
+            String keywords = keywordsField.getText().trim();
+            String pdfFilePath = selectedFile;
+
+            if (title.isEmpty() || abstractText.isEmpty() || keywords.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Por favor, completa todos los campos.");
+                return;
+            }
+
+            articleService.updateArticle(Long.parseLong(articleId), title, abstractText, keywords, pdfFilePath, autorId);
+            loadArticles();
+            clearFields();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error al actualizar el artículo: " + e.getMessage());
+        }
     }
-}
 
     private void deleteArticle() {
         int selectedRow = articleTable.getSelectedRow();
@@ -301,8 +322,8 @@ public class ArticleFrame extends JFrame implements Observer {
 
         try {
             String articleId = (String) tableModel.getValueAt(selectedRow, 0);
-            articleService.deleteArticle(Long.parseLong(articleId), autorId); // No mostramos mensaje aquí
-            loadArticles(); // Actualizamos la lista después de la eliminación
+            articleService.deleteArticle(Long.parseLong(articleId), autorId);
+            loadArticles();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error al eliminar el artículo: " + e.getMessage());
         }
@@ -335,3 +356,4 @@ public class ArticleFrame extends JFrame implements Observer {
         SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, message, "Notificación", JOptionPane.INFORMATION_MESSAGE));
     }
 }
+

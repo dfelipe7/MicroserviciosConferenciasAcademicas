@@ -1,14 +1,5 @@
 package vistasOrganizador;
 
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-
-/**
- *
- * @author Unicauca
- */
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import com.toedter.calendar.JDateChooser; // Importar la clase JDateChooser
@@ -22,28 +13,30 @@ public class ConferenceFrame extends JFrame {
 
     private JTextField nameField;
     private JTextField locationField;
-    private JDateChooser startDateChooser; // Usar JDateChooser en lugar de JTextField
-    private JDateChooser endDateChooser;   // Usar JDateChooser en lugar de JTextField
+    private JDateChooser startDateChooser; 
+    private JDateChooser endDateChooser;   
     private JTextField topicsField;
     private JTable conferenceTable;
     private DefaultTableModel tableModel;
     private ConferenceService conferenceService;
     private String organizerId;
-    private Long selectedConferenceId;  // Variable para almacenar la conferencia seleccionada
+    private Long selectedConferenceId;
 
     public ConferenceFrame(String organizerId) {
         this.organizerId = organizerId;
         conferenceService = new ConferenceService(); // Instancia de ConferenceService
         setTitle("Gestión de Conferencias");
-        setSize(600, 500);
+        setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Panel para los campos de entrada
-        JPanel inputPanel = new JPanel();
-        inputPanel.setLayout(new GridLayout(7, 2, 10, 10));
+        // Crear el panel principal
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        add(mainPanel, BorderLayout.CENTER);
 
-        // Campos de entrada
+        // Panel para los campos de entrada
+        JPanel inputPanel = new JPanel(new GridLayout(7, 2, 10, 10));
+
         inputPanel.add(new JLabel("Nombre:"));
         nameField = new JTextField();
         inputPanel.add(nameField);
@@ -53,60 +46,51 @@ public class ConferenceFrame extends JFrame {
         inputPanel.add(locationField);
 
         inputPanel.add(new JLabel("Fecha de Inicio:"));
-        startDateChooser = new JDateChooser(); // Inicializar el JDateChooser
+        startDateChooser = new JDateChooser();
         inputPanel.add(startDateChooser);
 
         inputPanel.add(new JLabel("Fecha de Fin:"));
-        endDateChooser = new JDateChooser(); // Inicializar el JDateChooser
+        endDateChooser = new JDateChooser();
         inputPanel.add(endDateChooser);
 
         inputPanel.add(new JLabel("Temas:"));
         topicsField = new JTextField();
         inputPanel.add(topicsField);
 
-        // Botón para crear la conferencia
+        // Botones para las acciones principales
+        JPanel buttonPanel = new JPanel(new GridLayout(2, 3, 10, 10));
+
         JButton createButton = new JButton("Crear Conferencia");
-        createButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                createConference();
-            }
-        });
-        inputPanel.add(createButton);
+        createButton.addActionListener(e -> createConference());
+        buttonPanel.add(createButton);
 
-        // Botón para listar conferencias
         JButton listButton = new JButton("Listar Conferencias");
-        listButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                listConferences();
-            }
-        });
-        inputPanel.add(listButton);
+        listButton.addActionListener(e -> listConferences());
+        buttonPanel.add(listButton);
 
-        // Botón para actualizar la conferencia
         JButton updateButton = new JButton("Actualizar Conferencia");
-        updateButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                updateConference();
-            }
-        });
-        inputPanel.add(updateButton);
+        updateButton.addActionListener(e -> updateConference());
+        buttonPanel.add(updateButton);
 
-        // Botón para eliminar la conferencia
         JButton deleteButton = new JButton("Eliminar Conferencia");
-        deleteButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                deleteConference();
-            }
-        });
-        inputPanel.add(deleteButton);
+        deleteButton.addActionListener(e -> deleteConference());
+        buttonPanel.add(deleteButton);
 
-        add(inputPanel, BorderLayout.NORTH);
+        JButton viewArticlesButton = new JButton("Ver Artículos");
+        viewArticlesButton.addActionListener(e -> showArticlesForSelectedConference());
+        buttonPanel.add(viewArticlesButton);
 
-        // Modelo y tabla para listar conferencias
+        JButton logoutButton = new JButton("Cerrar Sesión");
+        logoutButton.addActionListener(new LogoutButtonListener());
+        buttonPanel.add(logoutButton);
+
+        // Agregar los paneles al mainPanel
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.add(inputPanel, BorderLayout.CENTER);
+        topPanel.add(buttonPanel, BorderLayout.SOUTH);
+        mainPanel.add(topPanel, BorderLayout.NORTH);
+
+        // Tabla para listar conferencias
         String[] columnNames = {"ID", "Nombre", "Ubicación", "Fecha de Inicio", "Fecha de Fin", "Temas"};
         tableModel = new DefaultTableModel(columnNames, 0);
         conferenceTable = new JTable(tableModel);
@@ -114,17 +98,17 @@ public class ConferenceFrame extends JFrame {
 
         // Añadir JScrollPane para la tabla
         JScrollPane scrollPane = new JScrollPane(conferenceTable);
-        add(scrollPane, BorderLayout.CENTER);
+        scrollPane.setBorder(BorderFactory.createTitledBorder("Lista de Conferencias"));
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
 
-        // Añadir evento de selección de fila para cargar los datos en los campos de texto
+        // Evento de selección de fila
         conferenceTable.getSelectionModel().addListSelectionListener(e -> {
             int selectedRow = conferenceTable.getSelectedRow();
             if (selectedRow != -1) {
                 nameField.setText(tableModel.getValueAt(selectedRow, 1).toString());
                 locationField.setText(tableModel.getValueAt(selectedRow, 2).toString());
 
-                // Obtener las fechas del modelo de la tabla y establecerlas en los JDateChooser
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd"); // Ajustar formato según tu implementación
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
                 try {
                     startDateChooser.setDate(sdf.parse(tableModel.getValueAt(selectedRow, 3).toString()));
                     endDateChooser.setDate(sdf.parse(tableModel.getValueAt(selectedRow, 4).toString()));
@@ -133,37 +117,23 @@ public class ConferenceFrame extends JFrame {
                 }
 
                 topicsField.setText(tableModel.getValueAt(selectedRow, 5).toString());
-
-                // Obtener el ID seleccionado de la tabla y convertirlo a Long
-                String selectedIdString = tableModel.getValueAt(selectedRow, 0).toString();
-                selectedConferenceId = Long.parseLong(selectedIdString);
+                selectedConferenceId = Long.parseLong(tableModel.getValueAt(selectedRow, 0).toString());
             }
         });
-
-        // Botón de Cerrar Sesión
-        JButton logoutButton = new JButton("Cerrar Sesión");
-        logoutButton.addActionListener(new LogoutButtonListener()); // Evento de cierre de sesión
-        JPanel bottomPanel = new JPanel();
-        bottomPanel.add(logoutButton);
-        add(bottomPanel, BorderLayout.SOUTH);
-
-        // Establecer un borde
-        inputPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        scrollPane.setBorder(BorderFactory.createTitledBorder("Lista de Conferencias"));
     }
 
     private void createConference() {
         try {
             String name = nameField.getText();
             String location = locationField.getText();
-            String startDate = new SimpleDateFormat("yyyy-MM-dd").format(startDateChooser.getDate()); // Obtener la fecha como String
-            String endDate = new SimpleDateFormat("yyyy-MM-dd").format(endDateChooser.getDate()); // Obtener la fecha como String
+            String startDate = new SimpleDateFormat("yyyy-MM-dd").format(startDateChooser.getDate());
+            String endDate = new SimpleDateFormat("yyyy-MM-dd").format(endDateChooser.getDate());
             String topics = topicsField.getText();
 
             String result = conferenceService.createConference(name, location, startDate, endDate, topics, organizerId);
             JOptionPane.showMessageDialog(this, result);
-            clearFields(); // Limpiar campos después de crear
-            listConferences(); // Actualizar la tabla
+            clearFields();
+            listConferences();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
         }
@@ -172,7 +142,7 @@ public class ConferenceFrame extends JFrame {
     private void listConferences() {
         try {
             String[][] conferences = conferenceService.getConferences();
-            tableModel.setRowCount(0);  // Limpiar la tabla
+            tableModel.setRowCount(0);
             for (String[] conference : conferences) {
                 tableModel.addRow(conference);
             }
@@ -187,16 +157,17 @@ public class ConferenceFrame extends JFrame {
                 JOptionPane.showMessageDialog(this, "Por favor, selecciona una conferencia para actualizar.");
                 return;
             }
+
             String name = nameField.getText();
             String location = locationField.getText();
-            String startDate = new SimpleDateFormat("yyyy-MM-dd").format(startDateChooser.getDate()); // Obtener la fecha como String
-            String endDate = new SimpleDateFormat("yyyy-MM-dd").format(endDateChooser.getDate()); // Obtener la fecha como String
+            String startDate = new SimpleDateFormat("yyyy-MM-dd").format(startDateChooser.getDate());
+            String endDate = new SimpleDateFormat("yyyy-MM-dd").format(endDateChooser.getDate());
             String topics = topicsField.getText();
 
             String result = conferenceService.updateConference(selectedConferenceId, name, location, startDate, endDate, topics, organizerId);
             JOptionPane.showMessageDialog(this, result);
-            clearFields(); // Limpiar campos después de actualizar
-            listConferences(); // Actualizar la tabla después de la actualización
+            clearFields();
+            listConferences();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
         }
@@ -211,31 +182,44 @@ public class ConferenceFrame extends JFrame {
 
             String result = conferenceService.deleteConference(selectedConferenceId, organizerId);
             JOptionPane.showMessageDialog(this, result);
-            clearFields(); // Limpiar campos después de eliminar
-            listConferences(); // Actualizar la tabla después de la eliminación
+            clearFields();
+            listConferences();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
         }
     }
 
+ 
+    private void showArticlesForSelectedConference() {
+    if (selectedConferenceId == null) {
+        JOptionPane.showMessageDialog(this, "Por favor, selecciona una conferencia.");
+        return;
+    }
+
+    try {
+        String[][] articles = conferenceService.getArticlesByConference(selectedConferenceId);
+        String[][] evaluators = conferenceService.getEvaluators(); // Obtener evaluadores
+        ArticlesFrame articlesFrame = new ArticlesFrame(articles, evaluators);
+        articlesFrame.setVisible(true);
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, "Error al cargar datos: " + e.getMessage());
+    }
+}
+
     private void clearFields() {
         nameField.setText("");
         locationField.setText("");
-        startDateChooser.setDate(null); // Limpiar el JDateChooser
-        endDateChooser.setDate(null);   // Limpiar el JDateChooser
+        startDateChooser.setDate(null);
+        endDateChooser.setDate(null);
         topicsField.setText("");
-        selectedConferenceId = null;  // Limpiar el ID de la conferencia seleccionada
+        selectedConferenceId = null;
     }
-    // Evento de Cerrar Sesión
 
     private class LogoutButtonListener implements ActionListener {
-
         @Override
         public void actionPerformed(ActionEvent e) {
             JOptionPane.showMessageDialog(ConferenceFrame.this, "Sesión Cerrada");
-            dispose(); // Cierra esta ventana
-
-            // Abre la ventana de inicio de sesión (reemplaza con tu ventana de inicio)
+            dispose();
             VtnPrincipalLogin login = new VtnPrincipalLogin();
             login.setVisible(true);
         }

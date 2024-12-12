@@ -30,6 +30,10 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import entidades.ArticleDTO;
+import entidades.ReviewDTO;
 import java.util.ArrayList;
 import java.util.Map;
 import utils.Observer;
@@ -38,6 +42,7 @@ public class ArticleService {
 
     private static final String BASE_URL = "http://localhost:8095/api/articles";
     private static final String CONFERENCES_URL = "http://localhost:8085/api/conferences"; // Microservicio de conferencias
+    private static final String REVIEW_SERVICE_URL = "http://localhost:8070/api/reviews/article/";
     private HttpClient client = HttpClient.newHttpClient();
 //private HttpClient client = HttpClient.newHttpClient();
     private ObjectMapper objectMapper = new ObjectMapper();
@@ -215,6 +220,48 @@ public void deleteArticle(Long articleId, String userId) throws Exception {
         throw new Exception("Error al eliminar el artículo: " + response.body());
     }
 }
+////nuevo
 
+    public List<ArticleDTO> getArticlesByAuthor(String authorId) throws Exception {
+        String url = BASE_URL + "/author/" + authorId;
 
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(new java.net.URI(url))
+                .GET()
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == 200) {
+            return new Gson().fromJson(response.body(), new TypeToken<List<ArticleDTO>>() {}.getType());
+        } else {
+            throw new Exception("Error al obtener artículos: " + response.body());
+        }
+    }
+    ////
+    
+
+    public ReviewDTO getReviewByArticleId(Long articleId) throws Exception {
+        String url = REVIEW_SERVICE_URL + articleId;
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .GET()
+                .header("Content-Type", "application/json")
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == 200) {
+            Gson gson = new Gson();
+            return gson.fromJson(response.body(), ReviewDTO.class);
+        } else if (response.statusCode() == 404) {
+            return null; // No se encontró la revisión
+        } else {
+            throw new Exception("Error al obtener la revisión: " + response.body());
+        }
+    }
 }
+

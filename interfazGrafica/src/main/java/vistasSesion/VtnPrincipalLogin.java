@@ -4,6 +4,7 @@ import javax.swing.border.MatteBorder;
 import java.awt.Color;
 import javax.swing.JOptionPane;
 import vistasAutor.ArticleFrame;
+import vistasEvaluador.EvaluatorFrame;
 import vistasOrganizador.ConferenceFrame;
 
 /**
@@ -203,35 +204,38 @@ public class VtnPrincipalLogin extends javax.swing.JFrame {
 
     private void jButtonIngresarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonIngresarActionPerformed
 
-        // Captura de los datos del formulario
-        String email = jTextFieldUsuario.getText();
-        String password = new String(jPasswordFieldContrasena.getPassword());
+    // Captura de los datos del formulario
+    String email = jTextFieldUsuario.getText();
+    String password = new String(jPasswordFieldContrasena.getPassword());
 
-        // Crea una instancia de UserService
-        UserService userService = new UserService();
-        try {
-            // Llama al método de inicio de sesión de UserService
-            String response = userService.login(email, password);
+    // Crea una instancia de UserService
+    UserService userService = new UserService();
+    try {
+        // Llama al método de inicio de sesión de UserService
+        String response = userService.login(email, password);
 
-            // Verificar el rol del usuario y guardar el ID
-            String role = userService.getUserRole(email); // Método que necesitas implementar para obtener el rol del usuario
-            String userId = userService.getUserId(email); // Método que necesitas implementar para obtener el ID del usuario
+        // Verificar el rol del usuario y guardar el ID
+        String role = userService.getUserRole(email); // Método para obtener el rol del usuario
+        String userId = userService.getUserId(email); // Método para obtener el ID del usuario
 
-            if ("Organizador".equalsIgnoreCase(role)) {
-                ConferenceFrame conferenceFrame = new ConferenceFrame(userId);
-                conferenceFrame.setVisible(true);
-            } else if ("Autor".equalsIgnoreCase(role)) {
-                ArticleFrame articleFrame = new ArticleFrame(userId);
-                articleFrame.setVisible(true);
-            } else {
-                JOptionPane.showMessageDialog(this, "No tienes permisos para acceder a las conferencias.", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-
-        } catch (Exception e) {
-            // Muestra un mensaje de error en caso de que algo falle
-            JOptionPane.showMessageDialog(this, "Error al iniciar sesión: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        // Lógica para abrir la ventana correspondiente según el rol
+        if ("Organizador".equalsIgnoreCase(role)) {
+            ConferenceFrame conferenceFrame = new ConferenceFrame(userId);
+            conferenceFrame.setVisible(true);
+        } else if ("Autor".equalsIgnoreCase(role)) {
+            ArticleFrame articleFrame = new ArticleFrame(userId);
+            articleFrame.setVisible(true);
+        } else if ("Evaluador".equalsIgnoreCase(role)) {
+            EvaluatorFrame evaluatorFrame = new EvaluatorFrame(userId);
+            evaluatorFrame.setVisible(true);
+        } else {
+            JOptionPane.showMessageDialog(this, "No tienes permisos para acceder a esta funcionalidad.", "Error", JOptionPane.ERROR_MESSAGE);
         }
 
+    } catch (Exception e) {
+        // Muestra un mensaje de error en caso de que algo falle
+        JOptionPane.showMessageDialog(this, "Error al iniciar sesión: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+    }
     }//GEN-LAST:event_jButtonIngresarActionPerformed
 
     private void jTextFieldUsuarioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldUsuarioActionPerformed

@@ -11,6 +11,7 @@ package vistasOrganizador;
  */
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -120,6 +121,81 @@ public class ConferenceService {
             throw new Exception("Error al eliminar la conferencia: " + response.body());
         }
     }
+    
+    public String[][] getArticlesByConference(Long conferenceId) throws Exception {
+    String url = "http://localhost:8095/api/articles/conference/" + conferenceId;
+
+    HttpRequest request = HttpRequest.newBuilder()
+            .uri(new URI(url))
+            .GET()
+            .build();
+
+    HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+    if (response.statusCode() == 200) {
+        JsonArray jsonArray = JsonParser.parseString(response.body()).getAsJsonArray();
+        String[][] data = new String[jsonArray.size()][4];
+
+        for (int i = 0; i < jsonArray.size(); i++) {
+            JsonObject article = jsonArray.get(i).getAsJsonObject();
+            data[i][0] = article.get("id").getAsString();
+            data[i][1] = article.get("name").getAsString();
+            data[i][2] = article.get("autorId").getAsString();
+            data[i][3] = article.get("filePath").getAsString();
+        }
+
+        return data;
+    } else {
+        throw new Exception("Error al obtener artículos: " + response.body());
+    }
+}
+    
+    public String[][] getEvaluators() throws Exception {
+    String url = "http://localhost:8090/api/users/evaluators"; // URL del endpoint
+
+    HttpRequest request = HttpRequest.newBuilder()
+            .uri(new URI(url))
+            .GET()
+            .build();
+
+    HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+    if (response.statusCode() == 200) {
+        JsonArray jsonArray = JsonParser.parseString(response.body()).getAsJsonArray();
+        String[][] data = new String[jsonArray.size()][2];
+
+        for (int i = 0; i < jsonArray.size(); i++) {
+            JsonObject evaluator = jsonArray.get(i).getAsJsonObject();
+            data[i][0] = evaluator.get("id").getAsString(); // ID del evaluador
+            data[i][1] = evaluator.get("name").getAsString(); // Nombre del evaluador
+        }
+
+        return data;
+    } else {
+        throw new Exception("Error al obtener evaluadores: " + response.body());
+    }
+}
+
+public String assignEvaluatorToArticle(Long articleId, Long evaluatorId) throws Exception {
+    String url = "http://localhost:8095/api/articles/" + articleId + "/assign-evaluator?evaluatorId=" + evaluatorId;
+
+    HttpRequest request = HttpRequest.newBuilder()
+            .uri(new URI(url))
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.noBody()) // No es necesario enviar un cuerpo
+            .build();
+
+    HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+    if (response.statusCode() == 200) {
+        return "Evaluador asignado con éxito.";
+    } else {
+        throw new Exception("Error al asignar evaluador: " + response.body());
+    }
+}
+
+
+
 
 }
 
