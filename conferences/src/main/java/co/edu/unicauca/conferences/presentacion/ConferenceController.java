@@ -41,6 +41,9 @@ public class ConferenceController {
 
     @Value("${session.service.url}")
     private String sessionServiceUrl;
+    
+    @Value("${article.service.url}")
+    private String articleServiceUrl;
 
     /**
      * Endpoint para crear una nueva conferencia. Solo los usuarios con el rol
@@ -171,70 +174,6 @@ public class ConferenceController {
         }
     }
 
-    @PostMapping("/{conferenceId}/articles/{articleId}/assign-evaluator")
-    public ResponseEntity<String> assignEvaluator(
-            @PathVariable Long conferenceId,
-            @PathVariable Long articleId,
-            @RequestParam Long evaluatorId) {
-
-        // Validar que la conferencia exista
-        Optional<Conference> conference = conferenceService.getConferenceById(conferenceId);
-        if (conference.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Conferencia no encontrada.");
-        }
-
-        // Llamar al microservicio de artículos para obtener la información del artículo
-        ResponseEntity<ArticleDTO> articleResponse = restTemplate.getForEntity(
-                "http://localhost:8086/api/articles/" + articleId, ArticleDTO.class); // Cambiar URL según la configuración
-        if (!articleResponse.getStatusCode().is2xxSuccessful()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Artículo no encontrado.");
-        }
-
-        // Obtener el artículo desde la respuesta
-        ArticleDTO article = articleResponse.getBody();
-
-        // Verificar que el artículo pertenece a la conferencia
-        if (!article.getConferenceId().equals(conferenceId)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El artículo no pertenece a esta conferencia.");
-        }
-
-        // Simulación: Validar que el evaluador exista (este paso dependerá del microservicio de sesión)
-        // Puedes reemplazar esto con una llamada real al microservicio de sesión para validar el evaluador.
-        boolean evaluatorExists = true; // Simulación
-        if (!evaluatorExists) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Evaluador no encontrado.");
-        }
-
-        // Simulación de asignación (aquí deberías guardar la asignación en tu base de datos)
-        System.out.println("Evaluador con ID " + evaluatorId + " asignado al artículo: " + article.getTitle());
-        System.out.println("Archivo disponible en: " + article.getFilePath());
-
-        // Respuesta exitosa
-        return ResponseEntity.ok("Evaluador asignado con éxito al artículo.");
-    }
-    
-    @GetMapping("/{conferenceId}/articles")
-public ResponseEntity<List<ArticleDTO>> getArticlesByConference(@PathVariable Long conferenceId) {
-    // Verificar que la conferencia exista
-    Optional<Conference> conference = conferenceService.getConferenceById(conferenceId);
-    if (conference.isEmpty()) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-    }
-
-    // Llamar al microservicio de artículos para obtener los artículos de la conferencia
-    ResponseEntity<ArticleDTO[]> response = restTemplate.getForEntity(
-            "http://localhost:8086/api/articles/conference/" + conferenceId, ArticleDTO[].class);
-    
-    if (!response.getStatusCode().is2xxSuccessful()) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-    }
-
-    // Convertir el array de artículos a una lista
-    ArticleDTO[] articlesArray = response.getBody();
-    List<ArticleDTO> articles = List.of(articlesArray);
-
-    return ResponseEntity.ok(articles);
-}
-
+   
 
 }
