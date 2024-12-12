@@ -8,16 +8,19 @@ package co.edu.unicauca.review.dto;
  *
  * @author Unicauca
  */
-
 public class ReviewDTO {
-
     private Long id;
     private Long articleId;
     private Long evaluatorId;
     private String comments;
     private String status;
 
-    // Getters and Setters
+    // Nuevos campos
+    private String articleName; // Nombre del artículo
+    private String pdfPath; // Ruta del PDF
+
+    // Getters y setters
+
     public Long getId() {
         return id;
     }
@@ -56,5 +59,23 @@ public class ReviewDTO {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+    
+    
+    public String getArticleName(
+    ) {
+        return articleName;
+    }
+
+    public void setArticleName(String articleName) {
+        this.articleName = articleName;
+    }
+
+    public String getPdfPath() {
+        return pdfPath;
+    }
+
+    public void setPdfPath(String pdfPath) {
+        this.pdfPath = pdfPath;
     }
 }

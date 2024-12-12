@@ -6,6 +6,7 @@ package co.edu.unicauca.review.presentacion;
 
 import co.edu.unicauca.review.dto.ReviewDTO;
 import co.edu.unicauca.review.dto.UserDTO;
+import co.edu.unicauca.review.model.Review;
 import co.edu.unicauca.review.servicio.ReviewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +30,8 @@ public class ReviewController {
 
     @Value("${session.service.url}")
     private String sessionServiceUrl;
+    @Value("${article.service.url}")
+    private String articleServiceUrl;
 
  @PostMapping
 public ResponseEntity<String> createReview(@RequestBody ReviewDTO reviewDTO, @RequestParam Long reviewerId) {
@@ -72,4 +75,56 @@ public ResponseEntity<String> createReview(@RequestBody ReviewDTO reviewDTO, @Re
         reviewService.deleteReview(id);
         return ResponseEntity.noContent().build();
     }
+    
+/////
+
+@GetMapping("/evaluator/{evaluatorId}")
+public ResponseEntity<List<ReviewDTO>> getReviewsByEvaluator(@PathVariable Long evaluatorId) {
+    try {
+        // Obtener revisiones y sincronizar con los artículos asignados
+        List<ReviewDTO> reviews = reviewService.getReviewsByEvaluatorWithArticles(evaluatorId);
+
+        if (reviews.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(reviews);
+        }
+        return ResponseEntity.ok(reviews);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(null); // Devuelve un error interno si ocurre algún problema
+    }
+}
+
+
+@PutMapping("/{reviewId}")
+public ResponseEntity<String> updateReview(
+        @PathVariable Long reviewId,
+        @RequestBody ReviewDTO reviewDTO) {
+    try {
+        boolean isUpdated = reviewService.updateReview(reviewId, reviewDTO);
+
+        if (isUpdated) {
+            return ResponseEntity.ok("Revisión actualizada con éxito.");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No se encontró la revisión para actualizar.");
+        }
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error al actualizar la revisión: " + e.getMessage());
+    }
+}
+@GetMapping("/article/{articleId}")
+public ResponseEntity<ReviewDTO> getReviewByArticle(@PathVariable Long articleId) {
+    Optional<ReviewDTO> reviewDTO = reviewService.getReviewByArticleId(articleId);
+
+    if (reviewDTO.isPresent()) {
+        return ResponseEntity.ok(reviewDTO.get());
+    }
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+}
+
+
+
+
+
+
 }
