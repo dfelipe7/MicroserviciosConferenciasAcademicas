@@ -17,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
  * @author Esteban Martinez
  * @author Felipe Armero
  */
+
 @Configuration
 public class AppConfig {
     @Bean
@@ -24,3 +25,4 @@ public class AppConfig {
         return new RestTemplate();
     }
 }
+

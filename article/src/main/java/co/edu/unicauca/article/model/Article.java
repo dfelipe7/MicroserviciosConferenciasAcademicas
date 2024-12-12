@@ -42,6 +42,7 @@ public class Article {
     private Long conferenceId;
 
     private Long autorId;
+    private Long evaluatorId;
 
     /**
      * Obtiene el ID del artículo.
@@ -168,4 +169,13 @@ public class Article {
     public void setAutorId(Long autorId) {
         this.autorId = autorId;
     }
+
+    public Long getEvaluatorId() {
+        return evaluatorId;
+    }
+
+    public void setEvaluatorId(Long evaluatorId) {
+        this.evaluatorId = evaluatorId;
+    }
+    
 }

@@ -4,6 +4,7 @@
  */
 package co.edu.unicauca.article.presentacion;
 
+import co.edu.unicauca.article.dto.ArticleDTO;
 import co.edu.unicauca.article.dto.ConferenceDTO;
 import co.edu.unicauca.article.dto.UserDTO;
 import co.edu.unicauca.article.model.Article;
@@ -187,5 +188,42 @@ public ResponseEntity<List<Article>> getArticlesByConference(@PathVariable Long 
     List<Article> articles = articleService.getArticlesByConference(conferenceId);
     return ResponseEntity.ok(articles);
 }
+
+ /**
+     * Asigna un evaluador a un artículo.
+     *
+     * @param articleId ID del artículo.
+     * @param evaluatorId ID del evaluador.
+     * @return Mensaje de éxito o error.
+     */
+    @PostMapping("/{articleId}/assign-evaluator")
+    public ResponseEntity<String> assignEvaluator(
+            @PathVariable Long articleId,
+            @RequestParam Long evaluatorId) {
+        try {
+            articleService.assignEvaluatorToArticle(articleId, evaluatorId);
+            return ResponseEntity.ok("Evaluador asignado con éxito.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al asignar evaluador: " + e.getMessage());
+        }
+    }
+      @GetMapping("/evaluator/{evaluatorId}")
+    public ResponseEntity<List<Article>> getArticlesByEvaluator(@PathVariable Long evaluatorId) {
+        List<Article> articles = articleService.getArticlesByEvaluator(evaluatorId);
+        if (articles.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+        return ResponseEntity.ok(articles);
+    }
+    ////nuevo endpoint
+    @GetMapping("/author/{authorId}/articles")
+public ResponseEntity<List<ArticleDTO>> getArticlesByAuthor(@PathVariable Long autorId) {
+    List<ArticleDTO> articles = articleService.getArticlesByAuthor(autorId);
+    if (articles.isEmpty()) {
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(articles);
+    }
+    return ResponseEntity.ok(articles);
+}
+
 
 }
