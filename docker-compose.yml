@@ -1,0 +1,93 @@
+version: "3.8"
+
+services:
+  session-service:
+    build:
+      context: ./sesion
+      dockerfile: Dockerfile
+    container_name: session-service
+    image: session-service:latest
+    ports:
+      - "8090:8090"
+    networks:
+      - app-network
+    environment:
+      SPRING_APPLICATION_NAME: sesion
+      SPRING_DATASOURCE_URL: jdbc:h2:mem:testdb
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.h2.Driver
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: ""
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.H2Dialect
+
+  article-service:
+    build:
+      context: ./article
+      dockerfile: Dockerfile
+    container_name: article-service
+    image: article-service:latest
+    ports:
+      - "8095:8095"
+    networks:
+      - app-network
+    depends_on:
+      - session-service
+      - conference-service
+    environment:
+      SPRING_APPLICATION_NAME: articles
+      SPRING_DATASOURCE_URL: jdbc:h2:mem:testdb
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.h2.Driver
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: ""
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.H2Dialect
+      SESSION_SERVICE_URL: http://session-service:8090
+      CONFERENCE_SERVICE_URL: http://conference-service:8085
+      REVIEW_SERVICE_URL: http://review-service:8070
+
+  review-service:
+    build:
+      context: ./review
+      dockerfile: Dockerfile
+    container_name: review-service
+    image: review-service:latest
+    ports:
+      - "8070:8070"
+    networks:
+      - app-network
+    depends_on:
+      - session-service
+      - article-service
+    environment:
+      SPRING_APPLICATION_NAME: review
+      SPRING_DATASOURCE_URL: jdbc:h2:mem:testdb
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.h2.Driver
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: ""
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.H2Dialect
+      SESSION_SERVICE_URL: http://session-service:8090
+      ARTICLE_SERVICE_URL: http://article-service:8095
+
+  conference-service:
+    build:
+      context: ./conferences
+      dockerfile: Dockerfile
+    container_name: conference-service
+    image: conference-service:latest
+    ports:
+      - "8085:8085"
+    networks:
+      - app-network
+    depends_on:
+      - session-service
+    environment:
+      SPRING_APPLICATION_NAME: conferences
+      SPRING_DATASOURCE_URL: jdbc:h2:mem:testdb
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.h2.Driver
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: ""
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.H2Dialect
+      SESSION_SERVICE_URL: http://session-service:8090
+      ARTICLE_SERVICE_URL: http://article-service:8095
+
+networks:
+  app-network:
+    driver: bridge
