@@ -126,7 +126,7 @@ public class UserController {
             return ResponseEntity.notFound().build(); // Retorna 404 si no se encuentra el ID
         }
     }
-    
+    ///Obtener listado de usuarios que son evaluadores
      @GetMapping("/evaluators")
     public ResponseEntity<List<User>> getEvaluators() {
         try {
