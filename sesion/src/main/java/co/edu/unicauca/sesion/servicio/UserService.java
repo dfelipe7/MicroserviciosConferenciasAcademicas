@@ -6,10 +6,13 @@ package co.edu.unicauca.sesion.servicio;
 
 import co.edu.unicauca.sesion.dao.UserRepository;
 import co.edu.unicauca.sesion.factory.UserFactory;
+import co.edu.unicauca.sesion.model.EvaluatorUser;
 import co.edu.unicauca.sesion.model.User;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -122,5 +125,12 @@ public class UserService {
         return userRepository.findByEmail(email)
             .map(User::getRole) 
             .orElse(null);
+    }
+    
+    public List<User> getEvaluators() {
+        List<User> allUsers = (List<User>) userRepository.findAll(); // Obtén todos los usuarios
+        return allUsers.stream()
+                .filter(user -> user instanceof EvaluatorUser) // Filtra los evaluadores
+                .collect(Collectors.toList());
     }
 }

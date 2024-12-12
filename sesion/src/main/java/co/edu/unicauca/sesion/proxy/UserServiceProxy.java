@@ -6,6 +6,7 @@ package co.edu.unicauca.sesion.proxy;
 
 import co.edu.unicauca.sesion.servicio.UserService;
 import co.edu.unicauca.sesion.model.User;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -54,5 +55,11 @@ public class UserServiceProxy extends UserService {
 
     private boolean isValidRole(String role) {
         return role.equalsIgnoreCase("Organizador") || role.equalsIgnoreCase("Autor") || role.equalsIgnoreCase("Evaluador");
+    }
+    
+     @Override
+    public List<User> getEvaluators() {
+        // Delegar al servicio real
+        return userService.getEvaluators();
     }
 }

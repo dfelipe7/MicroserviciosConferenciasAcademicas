@@ -4,6 +4,7 @@ import co.edu.unicauca.sesion.dto.UserDTO;
 import co.edu.unicauca.sesion.model.User;
 import co.edu.unicauca.sesion.proxy.UserServiceProxy;
 import co.edu.unicauca.sesion.servicio.UserService;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -123,6 +124,16 @@ public class UserController {
             return ResponseEntity.ok(userId);
         } else {
             return ResponseEntity.notFound().build(); // Retorna 404 si no se encuentra el ID
+        }
+    }
+    
+     @GetMapping("/evaluators")
+    public ResponseEntity<List<User>> getEvaluators() {
+        try {
+            List<User> evaluators = userServiceProxy.getEvaluators();
+            return ResponseEntity.ok(evaluators);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 }

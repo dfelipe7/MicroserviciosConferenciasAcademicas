@@ -14,12 +14,30 @@ package co.edu.unicauca.sesion.dto;
  * DTO para manejar la creación de usuarios.
  */
 public class UserDTO {
+    private Long id;
     private String name;
     private String email;
     private String password;
     private String role;
 
+    public UserDTO(Long id, String name, String email, String role) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.role = role;
+    }
+    
+    
+
     // Getters y setters
+    
+     public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
     public String getName() {
         return name;
     }

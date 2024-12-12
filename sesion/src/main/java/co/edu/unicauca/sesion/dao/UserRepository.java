@@ -5,6 +5,7 @@
 package co.edu.unicauca.sesion.dao;
 
 import co.edu.unicauca.sesion.model.User;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
@@ -36,4 +37,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return un {@link Optional} que contiene el usuario si se encuentra
      */
     Optional<User> findById(Long id);
+    List<User> findAll();
 }
