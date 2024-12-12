@@ -16,7 +16,7 @@ public class VtnPrincipalSignUp extends javax.swing.JFrame {
 
         this.jComboBoxRol.addItem("Organizador");
         this.jComboBoxRol.addItem("Autor");
-        this.jComboBoxRol.addItem("Revisor");
+        this.jComboBoxRol.addItem("Evaluador");
         setDefaultCloseOperation(this.DISPOSE_ON_CLOSE);
 
     }
