@@ -28,6 +28,10 @@ El equipo de desarrollo:
   * Articulos asignados.
   * Cambio de estado de evaluacion
 ## Documentacion
+
 En el siguiente enlace: https://drive.google.com/drive/folders/1aNviVsBjpVhpy4fKKgfzP6XQTJtNcN8J?usp=drive_link
+Se encuentra: 
 + Video con la ejecucion del programa.
++ Documentacion del proyecto.
+
 
