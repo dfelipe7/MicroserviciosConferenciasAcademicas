@@ -5,6 +5,7 @@ Su objetivo principal es diseñar y construir una aplicación basada en microser
 lo cual permite una mejor separación de responsabilidades y facilita el mantenimiento del software.
 La aplicación estará destinada a ser utilizada en un entorno de escritorio, proporcionando una interfaz intuitiva y funcionalidades bien estructuradas.
 Uso de Docker para ejecutar los microservicios.
+Implementacion de patrones como Factory, Singleton, DTO, Observer, Strategy, proxy.
 El equipo de desarrollo: 
 - Duvan Felipe Armero
 - Daniel Felipe Muñoz
