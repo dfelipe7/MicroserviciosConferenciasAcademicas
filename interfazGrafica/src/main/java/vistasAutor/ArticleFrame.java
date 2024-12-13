@@ -23,11 +23,15 @@ public class ArticleFrame extends JFrame implements Observer {
     private JTable articleTable;
     private DefaultTableModel tableModel;
     private JTextField fileNameField; // Cuadro de texto para mostrar el nombre del archivo
+public ArticleFrame(String autorId) {
+    this.autorId = autorId;
+    articleService = ArticleService.getInstance(); // Usar Singleton
+        articleService.addObserver(this); // Registrar el frame como observador
 
-    public ArticleFrame(String autorId) {
-        this.autorId = autorId;
-        articleService = new ArticleService();
-        articleService.addObserver(this); // Registra el frame como observador
+    setTitle("Gestión de Artículos");
+    setSize(800, 600);
+    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    setLayout(new BorderLayout());
 
         setTitle("Gestión de Artículos");
         setSize(800, 600);
@@ -355,5 +359,14 @@ private void viewArticleStatus() {
     public void update(String message) {
         SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, message, "Notificación", JOptionPane.INFORMATION_MESSAGE));
     }
+    
+    
+
+// Asegúrate de eliminar el observador cuando la ventana se cierre
+@Override
+protected void finalize() throws Throwable {
+    articleService.removeObserver(this);
+    super.finalize();
+}
 }
 

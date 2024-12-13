@@ -34,13 +34,13 @@ public class ArticlesFrame extends JFrame {
     private ConferenceService conferenceService;
     private ArticleService articleService;
 
-    public ArticlesFrame(String[][] articles, String[][] evaluators) {
-        setTitle("Artículos Asociados");
-        setSize(600, 400);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+   public ArticlesFrame(String[][] articles, String[][] evaluators) {
+    setTitle("Artículos Asociados");
+    setSize(600, 400);
+    setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        conferenceService = new ConferenceService(); // Inicializar servicio
-        articleService = new ArticleService();
+    conferenceService = ConferenceService.getInstance(); // Usar Singleton
+    articleService = ArticleService.getInstance();       // Usar Singleton
 
         // Crear tabla para mostrar los artículos
         String[] columnNames = {"ID", "Título", "Autor", "Archivo", "Acción"};

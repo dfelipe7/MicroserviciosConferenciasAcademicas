@@ -21,14 +21,14 @@ public class ConferenceFrame extends JFrame {
     private ConferenceService conferenceService;
     private String organizerId;
     private Long selectedConferenceId;
+public ConferenceFrame(String organizerId) {
+    this.organizerId = organizerId;
+    conferenceService = ConferenceService.getInstance(); // Usar Singleton
 
-    public ConferenceFrame(String organizerId) {
-        this.organizerId = organizerId;
-        conferenceService = new ConferenceService(); // Instancia de ConferenceService
-        setTitle("Gestión de Conferencias");
-        setSize(800, 600);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout());
+    setTitle("Gestión de Conferencias");
+    setSize(800, 600);
+    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    setLayout(new BorderLayout());
 
         // Crear el panel principal
         JPanel mainPanel = new JPanel(new BorderLayout());

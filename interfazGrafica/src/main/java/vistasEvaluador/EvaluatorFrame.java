@@ -19,13 +19,13 @@ public class EvaluatorFrame extends JFrame {
     private boolean hasReviews = false; // Verificar si hay revisiones asignadas
 
     public EvaluatorFrame(String evaluatorId) {
-        this.evaluatorId = evaluatorId; // Asignar el evaluador ID
-        setTitle("Artículos Asignados");
-        setSize(800, 400);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout());
+    this.evaluatorId = evaluatorId;
+    setTitle("Artículos Asignados");
+    setSize(800, 400);
+    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    setLayout(new BorderLayout());
 
-        evaluatorService = new EvaluatorService();
+    evaluatorService = EvaluatorService.getInstance(); // Usar Singleton
 
         // Crear tabla para mostrar revisiones
         String[] columnNames = {"ID", "Nombre del Artículo", "PDF", "Estado", "Comentarios"};

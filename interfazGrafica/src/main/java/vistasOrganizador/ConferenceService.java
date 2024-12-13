@@ -19,12 +19,24 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 
+
 public class ConferenceService {
 
-    private static final String BASE_URL = "http://localhost:8085/api/conferences";
+    private static ConferenceService instance; // Instancia única de la clase
 
+    private static final String BASE_URL = "http://localhost:8085/api/conferences";
     private HttpClient client = HttpClient.newHttpClient();
 
+    private ConferenceService() {
+        // Constructor privado para evitar instanciación directa
+    }
+
+    public static synchronized ConferenceService getInstance() {
+        if (instance == null) {
+            instance = new ConferenceService();
+        }
+        return instance;
+    }
     public String createConference(String name, String location, String startDate, String endDate, String topics, String userId) throws Exception {
         String json = String.format("{\"name\": \"%s\", \"location\": \"%s\", \"startDate\": \"%s\", \"endDate\": \"%s\", \"topics\": \"%s\"}",
                 name, location, startDate, endDate, topics);
@@ -198,4 +210,5 @@ public String assignEvaluatorToArticle(Long articleId, Long evaluatorId) throws 
 
 
 }
+
 

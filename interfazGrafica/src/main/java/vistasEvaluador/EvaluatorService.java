@@ -17,13 +17,24 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
-
 public class EvaluatorService {
+
+    private static EvaluatorService instance; // Instancia única de la clase
 
     private static final String BASE_URL = "http://localhost:8070/api/reviews";
     private final HttpClient client = HttpClient.newHttpClient();
     private final Gson gson = new Gson();
 
+    private EvaluatorService() {
+        // Constructor privado para evitar instanciación directa
+    }
+
+    public static synchronized EvaluatorService getInstance() {
+        if (instance == null) {
+            instance = new EvaluatorService();
+        }
+        return instance;
+    }
     // Obtener revisiones por evaluador
     public List<ReviewDTO> getReviewsByEvaluator(String evaluatorId) throws Exception {
         String url = BASE_URL + "/evaluator/" + evaluatorId;

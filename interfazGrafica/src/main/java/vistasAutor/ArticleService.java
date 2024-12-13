@@ -40,30 +40,42 @@ import utils.Observer;
 
 public class ArticleService {
 
+    private static ArticleService instance; // Instancia única de la clase
+
     private static final String BASE_URL = "http://localhost:8095/api/articles";
-    private static final String CONFERENCES_URL = "http://localhost:8085/api/conferences"; // Microservicio de conferencias
+    private static final String CONFERENCES_URL = "http://localhost:8085/api/conferences";
     private static final String REVIEW_SERVICE_URL = "http://localhost:8070/api/reviews/article/";
     private HttpClient client = HttpClient.newHttpClient();
-//private HttpClient client = HttpClient.newHttpClient();
     private ObjectMapper objectMapper = new ObjectMapper();
-    
-    private List<Observer> observers = new ArrayList<>(); // Lista de observadores
+    private List<Observer> observers = new ArrayList<>();
 
-    // Métodos para gestionar observadores
-    public void addObserver(Observer observer) {
-        observers.add(observer);
+    private ArticleService() {
+        // Constructor privado para evitar instanciación directa
     }
 
-    public void removeObserver(Observer observer) {
+    public static synchronized ArticleService getInstance() {
+        if (instance == null) {
+            instance = new ArticleService();
+        }
+        return instance;
+    }
+    // Métodos para gestionar observadores
+    // Métodos del patrón Observer
+    public synchronized void addObserver(Observer observer) {
+        if (!observers.contains(observer)) { // Evitar duplicados
+            observers.add(observer);
+        }
+    }
+
+    public synchronized void removeObserver(Observer observer) {
         observers.remove(observer);
     }
 
-    private void notifyObservers(String message) {
+    public synchronized void notifyObservers(String message) {
         for (Observer observer : observers) {
             observer.update(message);
         }
     }
-
    public void createArticle(String name, String summary, String keywords, String conferenceId, String userId, String filePath) throws Exception {
     // Crear el JSON del artículo con los campos correctos
     Map<String, Object> articleData = Map.of(

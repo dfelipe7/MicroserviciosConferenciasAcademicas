@@ -17,8 +17,24 @@ import java.util.List;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.Gson;
 
+
 public class AuthorService {
+
+    private static AuthorService instance; // Instancia única de la clase
+
     private static final String BASE_URL = "http://localhost:8095/api/articles";
+    private HttpClient client = HttpClient.newHttpClient();
+
+    private AuthorService() {
+        // Constructor privado para evitar instanciación directa
+    }
+
+    public static synchronized AuthorService getInstance() {
+        if (instance == null) {
+            instance = new AuthorService();
+        }
+        return instance;
+    }
 
     public List<ArticleDTO> getArticlesByAuthor(String authorId) throws Exception {
         String url = BASE_URL + "/author/" + authorId;
