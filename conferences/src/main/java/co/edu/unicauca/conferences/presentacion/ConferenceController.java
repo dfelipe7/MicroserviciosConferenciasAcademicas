@@ -173,6 +173,14 @@ public class ConferenceController {
             return ResponseEntity.status(response.getStatusCode()).body("Error al obtener información del usuario.");
         }
     }
+    
+    @GetMapping("/filter")
+    public ResponseEntity<List<Conference>> filterConferences(
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) String topic) {
+        List<Conference> filteredConferences = conferenceService.filterConferences(location, topic);
+        return ResponseEntity.ok(filteredConferences);
+    }
 
    
 

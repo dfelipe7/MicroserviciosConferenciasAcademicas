@@ -6,6 +6,9 @@ package co.edu.unicauca.conferences.servicio;
 
 import co.edu.unicauca.conferences.dao.ConferenceRepository;
 import co.edu.unicauca.conferences.model.Conference;
+import co.edu.unicauca.conferences.strategy.ConferenceFilterContext;
+import co.edu.unicauca.conferences.strategy.LocationFilterStrategy;
+import co.edu.unicauca.conferences.strategy.TopicsFilterStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +29,23 @@ public class ConferenceService {
 
     @Autowired
     private ConferenceRepository conferenceRepository;
+    
+    
+    public List<Conference> filterConferences(String location, String topic) {
+        List<Conference> allConferences = conferenceRepository.findAll();
+
+        ConferenceFilterContext context;
+
+        if (location != null) {
+            context = new ConferenceFilterContext(new LocationFilterStrategy(location));
+        } else if (topic != null) {
+            context = new ConferenceFilterContext(new TopicsFilterStrategy(topic));
+        } else {
+            return allConferences; // Sin filtro, retorna todas las conferencias
+        }
+
+        return context.filter(allConferences);
+    }
 
     /**
      * Crea una nueva conferencia.
